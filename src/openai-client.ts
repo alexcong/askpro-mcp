@@ -1,9 +1,10 @@
+import OpenAI from "openai";
 import { z } from "zod";
 
 const ConfigSchema = z.object({
   apiKey: z.string().min(1, "OpenAI API key is required"),
   model: z.string().min(1, "OpenAI model is required"),
-  baseUrl: z.string().url().min(1, "OpenAI base URL is required"),
+  baseUrl: z.string().url().optional(),
 });
 
 export interface OpenAIRequest {
@@ -12,82 +13,80 @@ export interface OpenAIRequest {
 
 export interface OpenAIResponse {
   text: string;
-  metadata?: {
-    sources?: string[];
-  };
+  reasoningSummary?: string | null;
+  status: string;
 }
 
 export class OpenAIClient {
-  private readonly apiKey: string;
   private readonly model: string;
-  private readonly baseUrl: string;
+  private readonly client: OpenAI;
 
   constructor(config?: { apiKey?: string; model?: string; baseUrl?: string }) {
     const validatedConfig = ConfigSchema.parse({
       apiKey: config?.apiKey ?? Deno.env.get("OPENAI_API_KEY"),
       model: config?.model ?? Deno.env.get("OPENAI_MODEL"),
-      baseUrl: config?.baseUrl ??
-        Deno.env.get("OPENAI_BASE_URL") ??
-        "https://api.openai.com",
+      baseUrl: config?.baseUrl ?? Deno.env.get("OPENAI_BASE_URL") ?? undefined,
     });
 
-    this.apiKey = validatedConfig.apiKey;
     this.model = validatedConfig.model;
-    this.baseUrl = validatedConfig.baseUrl.replace(/\/+$/, "");
+    this.client = new OpenAI({
+      apiKey: validatedConfig.apiKey,
+      baseURL: validatedConfig.baseUrl,
+    });
   }
 
   async generate(request: OpenAIRequest): Promise<OpenAIResponse> {
-    const payload = {
-      model: this.model,
-      input: [
-        {
-          role: "user",
-          content: [
-            {
-              type: "input_text",
-              text: request.prompt,
-            },
-          ],
-        },
-      ],
-    };
+    try {
+      const response = await this.client.responses.create({
+        model: this.model,
+        input: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "input_text",
+                text: request.prompt,
+              },
+            ],
+          },
+        ],
+        text: {},
+        reasoning: {},
+        tools: [],
+        store: false,
+      });
 
-    const response = await fetch(`${this.baseUrl}/v1/responses`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
-      },
-      body: JSON.stringify(payload),
-    });
+      const text = this.extractOutputText(response) ||
+        "No response text returned from OpenAI.";
+      const reasoningSummary = this.extractReasoningSummary(response);
+      const status = this.extractStatus(response);
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(
-        `OpenAI response API error (${response.status}): ${errorText}`,
-      );
+      return {
+        text,
+        reasoningSummary,
+        status,
+      };
+    } catch (error) {
+      const message = this.normalizeError(error);
+      throw new Error(`OpenAI generation failed: ${message}`);
     }
-
-    const json = await response.json();
-
-    const primaryText = typeof json.output_text === "string"
-      ? json.output_text
-      : "";
-    const fallbackText = this.extractOutputText(json.output);
-    const text = primaryText || fallbackText ||
-      "No response text returned from OpenAI.";
-
-    const sources = this.extractSources(json.output);
-
-    return {
-      text,
-      metadata: sources.length > 0 ? { sources } : undefined,
-    };
   }
 
-  private extractOutputText(
-    output: unknown,
-  ): string {
+  private extractOutputText(response: unknown): string {
+    const result = response as
+      | undefined
+      | {
+        output_text?: unknown;
+        output?: unknown;
+      };
+
+    if (
+      typeof result?.output_text === "string" && result.output_text.length > 0
+    ) {
+      return result.output_text;
+    }
+
+    const output = result?.output;
     if (!Array.isArray(output)) {
       return "";
     }
@@ -95,15 +94,17 @@ export class OpenAIClient {
     const texts: string[] = [];
     for (const item of output) {
       if (
-        item && typeof item === "object" && item.type === "message" &&
-        Array.isArray(item.content)
+        item && typeof item === "object" && (item as { type?: string }).type ===
+          "message" &&
+        Array.isArray((item as { content?: unknown }).content)
       ) {
-        for (const content of item.content) {
+        for (const part of (item as { content: unknown[] }).content) {
           if (
-            content && typeof content === "object" &&
-            content.type === "output_text" && typeof content.text === "string"
+            part && typeof part === "object" &&
+            (part as { type?: string }).type === "output_text" &&
+            typeof (part as { text?: unknown }).text === "string"
           ) {
-            texts.push(content.text);
+            texts.push((part as { text: string }).text);
           }
         }
       }
@@ -112,33 +113,40 @@ export class OpenAIClient {
     return texts.join("\n\n");
   }
 
-  private extractSources(output: unknown): string[] {
-    const urls = new Set<string>();
+  private extractReasoningSummary(
+    response: unknown,
+  ): string | null | undefined {
+    const reasoning = (response as { reasoning?: unknown })?.reasoning;
+    if (!reasoning || typeof reasoning !== "object") {
+      return undefined;
+    }
 
-    const traverse = (value: unknown): void => {
-      if (Array.isArray(value)) {
-        for (const item of value) {
-          traverse(item);
-        }
-        return;
+    const summary = (reasoning as { summary?: unknown }).summary;
+    if (typeof summary === "string") {
+      return summary;
+    }
+
+    return summary == null ? null : undefined;
+  }
+
+  private extractStatus(response: unknown): string {
+    const status = (response as { status?: unknown })?.status;
+    return typeof status === "string" && status.length > 0 ? status : "unknown";
+  }
+
+  private normalizeError(error: unknown): string {
+    if (error instanceof Error) {
+      return error.message;
+    }
+
+    if (error && typeof error === "object") {
+      try {
+        return JSON.stringify(error);
+      } catch {
+        return String(error);
       }
+    }
 
-      if (value && typeof value === "object") {
-        for (const [key, val] of Object.entries(value)) {
-          if (
-            (key === "url" || key === "uri" || key.endsWith("_url")) &&
-            typeof val === "string"
-          ) {
-            urls.add(val);
-          } else {
-            traverse(val);
-          }
-        }
-      }
-    };
-
-    traverse(output);
-
-    return [...urls];
+    return String(error);
   }
 }

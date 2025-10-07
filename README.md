@@ -149,8 +149,7 @@ access.
 
 ### ask_gpt
 
-Focused assistant powered by OpenAI GPT-5 Pro via the Responses API for
-high-quality reasoning and synthesis.
+Focused assistant powered by OpenAI GPT-5 Pro via the Responses API for high-quality reasoning and synthesis. 
 **Parameters:**
 
 - `prompt` (required): Your question, problem statement, or background context

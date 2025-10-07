@@ -1,6 +1,6 @@
 {
   "name": "@cong/askpro-mcp",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "exports": "./src/server.ts",
   "tasks": {
     "dev": "deno run --allow-net --allow-env --watch src/server.ts",
@@ -13,6 +13,7 @@
     "@std/testing": "jsr:@std/testing@1",
     "@modelcontextprotocol/sdk": "npm:@modelcontextprotocol/sdk@^1.12.3",
     "@google/generative-ai": "npm:@google/generative-ai@^0.24.1",
+    "openai": "npm:openai@^4.53.0",
     "zod": "npm:zod@^3.25.67"
   },
   "compilerOptions": {

@@ -39,6 +39,15 @@ export async function handleAskGpt(
 
     let formattedResponse = response.text;
 
+    if (response.reasoningSummary) {
+      formattedResponse +=
+        `\n\n**Reasoning Summary:** ${response.reasoningSummary}`;
+    }
+
+    if (response.status && response.status !== "completed") {
+      formattedResponse += `\n\n_Status: ${response.status}_`;
+    }
+
     return {
       content: [
         {
