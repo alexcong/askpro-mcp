@@ -1,0 +1,27 @@
+{
+  "name": "@cong/askpro-mcp",
+  "version": "0.3.1",
+  "description": "Model Context Protocol server for Google Gemini and OpenAI GPT with web search",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cong/askpro-mcp.git"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol", 
+    "gemini",
+    "gpt",
+    "ai",
+    "claude",
+    "google",
+    "openai",
+    "search",
+    "deno"
+  ],
+  "author": {
+    "name": "Cong",
+    "url": "https://github.com/cong"
+  },
+  "exports": "./src/server.ts"
+}
