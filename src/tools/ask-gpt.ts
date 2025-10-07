@@ -12,14 +12,14 @@ const AskGptArgsSchema = z.object({
 export const askGptTool: Tool = {
   name: "ask_gpt",
   description:
-    "Generate comprehensive responses using OpenAI GPT with built-in web search.",
+    "Use OpenAI GPT for deep reasoning, structured analysis, and complex problem solving.",
   inputSchema: {
     type: "object",
     properties: {
       prompt: {
         type: "string",
         description:
-          "Your question or request.",
+          "Your question, problem statement, or analysis request. Include any necessary context directly.",
       },
       temperature: {
         type: "number",
@@ -49,16 +49,6 @@ export async function handleAskGpt(
     const response = await openAiClient.generate(request);
 
     let formattedResponse = response.text;
-
-    if (response.metadata?.sources && response.metadata.sources.length > 0) {
-      const uniqueSources = [...new Set(response.metadata.sources)];
-      if (uniqueSources.length > 0) {
-        formattedResponse += "\n\n**Sources:**\n";
-        uniqueSources.forEach((source, index) => {
-          formattedResponse += `${index + 1}. ${source}\n`;
-        });
-      }
-    }
 
     return {
       content: [

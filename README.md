@@ -7,8 +7,8 @@ capabilities as tools. Built with Deno and TypeScript.
 
 - **ask_gemini**: Unified AI assistant powered by Gemini 2.5 Pro with built-in
   Google Search and URL analysis capabilities
-- **ask_gpt**: GPT-5 Pro assistant powered by OpenAI's Responses API with
-  always-on web search and URL analysis
+- **ask_gpt**: GPT-5 Pro assistant powered by OpenAI's Responses API for deep
+  reasoning and complex analysis (no web search)
 
 ## Prerequisites
 
@@ -110,7 +110,8 @@ deno lint
 ### ask_gemini
 
 The unified AI assistant powered by Gemini 2.5 Pro with built-in Google Search
-and URL analysis capabilities.
+and URL analysis capabilities. This is the only tool in the server with live web
+access.
 
 **Parameters:**
 
@@ -148,9 +149,8 @@ and URL analysis capabilities.
 
 ### ask_gpt
 
-The unified assistant powered by OpenAI GPT-5 Pro via the Responses API with
-built-in web search.
-
+Focused assistant powered by OpenAI GPT-5 Pro via the Responses API for
+high-quality reasoning and synthesis. 
 **Parameters:**
 
 - `prompt` (required): Your question or request. Include URLs directly in the
@@ -164,7 +164,7 @@ built-in web search.
 {
   "name": "ask_gpt",
   "arguments": {
-    "prompt": "Summarize the latest advancements in renewable energy. Review https://www.iea.org/reports/global-renewables-outlook-2024",
+    "prompt": "Analyze the following summary and extract the three biggest strategic risks for our product launch: ...",
     "temperature": 0.5
   }
 }
@@ -172,10 +172,9 @@ built-in web search.
 
 **Capabilities:**
 
-- 🌐 Automatic web search for fresh information
-- 📄 URL analysis for any links included in the prompt
 - 🧠 GPT-5 Pro reasoning through the Responses API
-- 📚 Returns citations when provided by the model
+- 🛠 Ideal for structured analysis, synthesis, and step-by-step problem solving
+- ✍️ Use when you already have the necessary context in your prompt
 
 ## Project Structure
 
@@ -186,7 +185,7 @@ src/
 ├── openai-client.ts            # OpenAI Responses API client wrapper
 ├── tools/
 │   ├── ask-gemini.ts           # Unified AI tool (Gemini 2.5 Pro + Search + URLs)
-│   └── ask-gpt.ts              # GPT-5 Pro Responses API tool with web search
+│   └── ask-gpt.ts              # GPT-5 Pro Responses API tool for deep reasoning
 tests/
 ├── server_test.ts              # Server configuration tests
 ├── gemini_client_test.ts       # API client tests

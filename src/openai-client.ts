@@ -51,11 +51,6 @@ export class OpenAIClient {
           ],
         },
       ],
-      tools: [
-        {
-          type: "web_search",
-        },
-      ],
       temperature: request.temperature ?? 0.7,
     };
 
