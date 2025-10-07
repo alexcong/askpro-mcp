@@ -13,26 +13,6 @@ Deno.test("handleAskGpt - validates required prompt", async () => {
   await assertRejects(() => handleAskGpt({ prompt: "" }), Error);
 });
 
-Deno.test("handleAskGpt - validates temperature range", async () => {
-  await assertRejects(
-    () =>
-      handleAskGpt({
-        prompt: "test",
-        temperature: -1,
-      }),
-    Error,
-  );
-
-  await assertRejects(
-    () =>
-      handleAskGpt({
-        prompt: "test",
-        temperature: 3,
-      }),
-    Error,
-  );
-});
-
 Deno.test("handleAskGpt - accepts valid arguments", async () => {
   Deno.env.set("OPENAI_API_KEY", "test-key");
   Deno.env.set("OPENAI_MODEL", "test-model");
@@ -40,7 +20,6 @@ Deno.test("handleAskGpt - accepts valid arguments", async () => {
   try {
     await handleAskGpt({
       prompt: "Explain artificial intelligence basics.",
-      temperature: 0.7,
     });
   } catch (error) {
     assertEquals(

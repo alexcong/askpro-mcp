@@ -8,7 +8,6 @@ const ConfigSchema = z.object({
 
 export interface OpenAIRequest {
   prompt: string;
-  temperature?: number;
 }
 
 export interface OpenAIResponse {
@@ -51,7 +50,6 @@ export class OpenAIClient {
           ],
         },
       ],
-      temperature: request.temperature ?? 0.7,
     };
 
     const response = await fetch(`${this.baseUrl}/v1/responses`, {

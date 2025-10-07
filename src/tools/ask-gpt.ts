@@ -4,9 +4,6 @@ import { OpenAIClient, OpenAIRequest } from "../openai-client.ts";
 
 const AskGptArgsSchema = z.object({
   prompt: z.string().min(1, "Prompt is required"),
-  temperature: z.number().min(0).max(2).optional().describe(
-    "Controls randomness and creativity. Range: 0-2.  0=deterministic, 0.2=focused/factual, 0.7=balanced (default), 1.0-2.0=creative/diverse",
-  ),
 });
 
 export const askGptTool: Tool = {
@@ -20,13 +17,6 @@ export const askGptTool: Tool = {
         type: "string",
         description:
           "Your question, problem statement, or analysis request. Include any necessary context directly.",
-      },
-      temperature: {
-        type: "number",
-        minimum: 0,
-        maximum: 2,
-        description:
-          "Controls randomness and creativity. 0=deterministic output, 0.2=focused/factual responses, 0.7=balanced (default), 1.0-2.0=creative/diverse outputs.",
       },
     },
     required: ["prompt"],
@@ -42,7 +32,6 @@ export async function handleAskGpt(
 
   const request: OpenAIRequest = {
     prompt: validatedArgs.prompt,
-    temperature: validatedArgs.temperature,
   };
 
   try {

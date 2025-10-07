@@ -150,13 +150,11 @@ access.
 ### ask_gpt
 
 Focused assistant powered by OpenAI GPT-5 Pro via the Responses API for
-high-quality reasoning and synthesis. 
+high-quality reasoning and synthesis.
 **Parameters:**
 
-- `prompt` (required): Your question or request. Include URLs directly in the
-  text for analysis.
-- `temperature` (optional): Controls randomness and creativity (0-2, default:
-  0.7)
+- `prompt` (required): Your question, problem statement, or background context
+  for reasoning.
 
 **Example:**
 
@@ -164,8 +162,7 @@ high-quality reasoning and synthesis.
 {
   "name": "ask_gpt",
   "arguments": {
-    "prompt": "Analyze the following summary and extract the three biggest strategic risks for our product launch: ...",
-    "temperature": 0.5
+    "prompt": "Analyze the following summary and extract the three biggest strategic risks for our product launch: ..."
   }
 }
 ```
