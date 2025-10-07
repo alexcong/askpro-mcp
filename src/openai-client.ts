@@ -26,7 +26,7 @@ export class OpenAIClient {
   constructor(config?: { apiKey?: string; model?: string; baseUrl?: string }) {
     const validatedConfig = ConfigSchema.parse({
       apiKey: config?.apiKey ?? Deno.env.get("OPENAI_API_KEY"),
-      model: config?.model ?? Deno.env.get("OPENAI_MODEL") ?? "gpt-5-pro",
+      model: config?.model ?? Deno.env.get("OPENAI_MODEL"),
       baseUrl: config?.baseUrl ?? Deno.env.get("OPENAI_BASE_URL") ??
         "https://api.openai.com",
     });

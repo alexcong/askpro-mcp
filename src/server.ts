@@ -10,26 +10,6 @@ import {
 import { askGeminiTool, handleAskGemini } from "./tools/ask-gemini.ts";
 import { askGptTool, handleAskGpt } from "./tools/ask-gpt.ts";
 
-// Import prompts
-import {
-  buildResearchAnalysisPrompt,
-  researchAnalysisPrompt,
-} from "./prompts/research-analysis.ts";
-import {
-  buildCurrentEventsPrompt,
-  currentEventsPrompt,
-} from "./prompts/current-events.ts";
-import {
-  buildTechnicalDocumentationPrompt,
-  technicalDocumentationPrompt,
-} from "./prompts/technical-documentation.ts";
-import {
-  buildCompareSourcesPrompt,
-  compareSourcesPrompt,
-} from "./prompts/compare-sources.ts";
-import { buildFactCheckPrompt, factCheckPrompt } from "./prompts/fact-check.ts";
-import { buildDeepthinkPrompt, deepthinkPrompt } from "./prompts/deepthink.ts";
-
 class GeminiMcpServer {
   private server: Server;
 
@@ -89,67 +69,11 @@ class GeminiMcpServer {
 
     // Prompts
     this.server.setRequestHandler(ListPromptsRequestSchema, () => {
-      return {
-        prompts: [
-          researchAnalysisPrompt,
-          currentEventsPrompt,
-          technicalDocumentationPrompt,
-          compareSourcesPrompt,
-          factCheckPrompt,
-          deepthinkPrompt,
-        ],
-      };
+      return { prompts: [] };
     });
 
-    this.server.setRequestHandler(GetPromptRequestSchema, async (request) => {
-      const { name, arguments: args } = request.params;
-
-      try {
-        let toolCall;
-        switch (name) {
-          case "research_analysis":
-            toolCall = buildResearchAnalysisPrompt(args || {});
-            break;
-          case "current_events":
-            toolCall = buildCurrentEventsPrompt(args || {});
-            break;
-          case "technical_documentation":
-            toolCall = buildTechnicalDocumentationPrompt(args || {});
-            break;
-          case "compare_sources":
-            toolCall = buildCompareSourcesPrompt(args || {});
-            break;
-          case "fact_check":
-            toolCall = buildFactCheckPrompt(args || {});
-            break;
-          case "deepthink":
-            toolCall = buildDeepthinkPrompt(args || {});
-            break;
-          default:
-            throw new Error(`Unknown prompt: ${name}`);
-        }
-
-        return {
-          description: `Prompt for ${name}`,
-          messages: [
-            {
-              role: "user",
-              content: {
-                type: "text",
-                text: `Use the ${toolCall.tool} tool with these arguments: ${
-                  JSON.stringify(toolCall.arguments, null, 2)
-                }`,
-              },
-            },
-          ],
-        };
-      } catch (error) {
-        throw new Error(
-          `Failed to generate prompt: ${
-            error instanceof Error ? error.message : String(error)
-          }`,
-        );
-      }
+    this.server.setRequestHandler(GetPromptRequestSchema, () => {
+      throw new Error("No prompts are available in this server.");
     });
   }
 
@@ -160,7 +84,7 @@ class GeminiMcpServer {
     const hasApiKey = !!Deno.env.get("GEMINI_API_KEY");
     const hasModel = !!Deno.env.get("GEMINI_MODEL");
     const hasOpenAiKey = !!Deno.env.get("OPENAI_API_KEY");
-    const openAiModel = Deno.env.get("OPENAI_MODEL") ?? "gpt-5-pro";
+    const openAiModel = Deno.env.get("OPENAI_MODEL") ?? "NOT SET";
 
     console.error(
       `AskPro MCP Server running on stdio (Gemini API Key: ${
@@ -191,8 +115,12 @@ async function main(): Promise<void> {
     Deno.exit(1);
   }
 
-  if (!Deno.env.get("OPENAI_MODEL")) {
-    console.error("Info: OPENAI_MODEL not set, defaulting to gpt-5-pro");
+  const openAiModel = Deno.env.get("OPENAI_MODEL");
+  if (!openAiModel) {
+    console.error("Error: OPENAI_MODEL environment variable is required");
+    console.error("Please set your OpenAI model identifier (e.g., gpt-5-pro):");
+    console.error("export OPENAI_MODEL=gpt-5-pro");
+    Deno.exit(1);
   }
 
   const server = new GeminiMcpServer();

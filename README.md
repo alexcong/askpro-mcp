@@ -42,8 +42,7 @@ cd askpro-mcp
 export GEMINI_API_KEY=your_api_key_here
 export GEMINI_MODEL=gemini-2.5-pro
 export OPENAI_API_KEY=your_openai_api_key
-# Optional override (defaults to gpt-5-pro)
-# export OPENAI_MODEL=gpt-5-pro
+export OPENAI_MODEL=gpt-5-pro
 ```
 
 ## Usage
@@ -55,8 +54,7 @@ export OPENAI_API_KEY=your_openai_api_key
 export GEMINI_API_KEY=your_api_key_here
 export GEMINI_MODEL=gemini-2.5-pro
 export OPENAI_API_KEY=your_openai_api_key
-# Optional override (defaults to gpt-5-pro)
-# export OPENAI_MODEL=gpt-5-pro
+export OPENAI_MODEL=gpt-5-pro
 
 # Development mode (with watch)
 deno task dev
@@ -75,8 +73,7 @@ are set:
 export GEMINI_API_KEY=your_api_key_here
 export GEMINI_MODEL=gemini-2.5-pro
 export OPENAI_API_KEY=your_openai_api_key
-# Optional override (defaults to gpt-5-pro)
-# export OPENAI_MODEL=gpt-5-pro
+export OPENAI_MODEL=gpt-5-pro
 
 # Install MCP Inspector if you haven't already
 npm install -g @modelcontextprotocol/inspector
@@ -180,61 +177,6 @@ built-in web search.
 - 🧠 GPT-5 Pro reasoning through the Responses API
 - 📚 Returns citations when provided by the model
 
-## MCP Prompts (Claude Desktop Integration)
-
-Pre-configured workflows that appear as slash commands in Claude Desktop:
-
-### /research_analysis
-
-Research a topic comprehensively with automatic web search and optional URL
-analysis.
-
-- **Arguments**: `topic` (required), `urls` (optional), `focus_areas` (optional)
-- **Use case**: Academic research, market analysis, technology investigations
-
-### /current_events
-
-Get up-to-date information on recent developments and news.
-
-- **Arguments**: `topic` (required), `time_period` (optional), `region`
-  (optional)
-- **Use case**: Breaking news, recent developments, current status updates
-
-### /technical_documentation
-
-Analyze technical documentation and provide clear explanations.
-
-- **Arguments**: `documentation_urls` (required), `question` (required),
-  `complexity_level` (optional)
-- **Use case**: API documentation, RFCs, technical specifications
-
-### /compare_sources
-
-Compare information across multiple sources and provide analysis.
-
-- **Arguments**: `topic` (required), `source_urls` (required),
-  `comparison_criteria` (optional)
-- **Use case**: Research validation, source comparison, bias analysis
-
-### /fact_check
-
-Verify claims and statements with current information and reliable sources.
-
-- **Arguments**: `claim` (required), `context` (optional)
-- **Use case**: Information verification, claim validation, accuracy checking
-
-### /deepthink
-
-Deep reasoning and analysis for complex problems using maximum thinking
-capacity.
-
-- **Arguments**: `problem` (required), `context` (optional), `approach`
-  (optional)
-- **Features**: Uses maximum thinking budget (32,768 tokens) with balanced
-  temperature (0.7)
-- **Use case**: Complex decision-making, strategic planning, ethical dilemmas,
-  multi-faceted problem analysis
-
 ## Project Structure
 
 ```
@@ -245,20 +187,13 @@ src/
 ├── tools/
 │   ├── ask-gemini.ts           # Unified AI tool (Gemini 2.5 Pro + Search + URLs)
 │   └── ask-gpt.ts              # GPT-5 Pro Responses API tool with web search
-└── prompts/                    # MCP prompts for Claude Desktop
-    ├── research-analysis.ts    # Research workflow
-    ├── current-events.ts       # News and current events
-    ├── technical-documentation.ts # Technical docs analysis
-    ├── compare-sources.ts      # Source comparison
-    ├── fact-check.ts           # Fact verification
-    └── deepthink.ts            # Deep reasoning for complex problems
 tests/
-├── server_test.ts              # Server and prompt tests
+├── server_test.ts              # Server configuration tests
 ├── gemini_client_test.ts       # API client tests
 ├── gemini_client_enhanced_test.ts # Enhanced client tests
-├── prompts_test.ts             # Prompt logic tests
 └── tools/
-    └── ask_gemini_test.ts      # Tool tests
+    ├── ask_gemini_test.ts      # Gemini tool tests
+    └── ask_gpt_test.ts         # GPT tool tests
 ```
 
 ## Dependencies

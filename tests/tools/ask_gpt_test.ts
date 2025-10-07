@@ -35,6 +35,7 @@ Deno.test("handleAskGpt - validates temperature range", async () => {
 
 Deno.test("handleAskGpt - accepts valid arguments", async () => {
   Deno.env.set("OPENAI_API_KEY", "test-key");
+  Deno.env.set("OPENAI_MODEL", "test-model");
 
   try {
     await handleAskGpt({
@@ -50,4 +51,5 @@ Deno.test("handleAskGpt - accepts valid arguments", async () => {
   }
 
   Deno.env.delete("OPENAI_API_KEY");
+  Deno.env.delete("OPENAI_MODEL");
 });

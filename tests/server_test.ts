@@ -18,6 +18,8 @@ Deno.test("Server - environment validation", () => {
   Deno.env.delete("GEMINI_API_KEY");
   const originalOpenAiKey = Deno.env.get("OPENAI_API_KEY");
   Deno.env.set("OPENAI_API_KEY", "test-openai-key");
+  const originalOpenAiModel = Deno.env.get("OPENAI_MODEL");
+  Deno.env.set("OPENAI_MODEL", "test-model");
 
   try {
     const cmd = new Deno.Command("deno", {
@@ -42,15 +44,22 @@ Deno.test("Server - environment validation", () => {
     } else {
       Deno.env.delete("OPENAI_API_KEY");
     }
+    if (originalOpenAiModel) {
+      Deno.env.set("OPENAI_MODEL", originalOpenAiModel);
+    } else {
+      Deno.env.delete("OPENAI_MODEL");
+    }
   }
 });
 
 Deno.test("Server - requires OpenAI API key", () => {
   const originalGeminiKey = Deno.env.get("GEMINI_API_KEY");
   const originalOpenAiKey = Deno.env.get("OPENAI_API_KEY");
+  const originalOpenAiModel = Deno.env.get("OPENAI_MODEL");
 
   Deno.env.set("GEMINI_API_KEY", "test-key");
   Deno.env.delete("OPENAI_API_KEY");
+  Deno.env.set("OPENAI_MODEL", "test-model");
 
   try {
     const cmd = new Deno.Command("deno", {
@@ -75,6 +84,55 @@ Deno.test("Server - requires OpenAI API key", () => {
 
     if (originalOpenAiKey) {
       Deno.env.set("OPENAI_API_KEY", originalOpenAiKey);
+    }
+    if (originalOpenAiModel) {
+      Deno.env.set("OPENAI_MODEL", originalOpenAiModel);
+    } else {
+      Deno.env.delete("OPENAI_MODEL");
+    }
+  }
+});
+
+Deno.test("Server - requires OpenAI model", () => {
+  const originalGeminiKey = Deno.env.get("GEMINI_API_KEY");
+  const originalOpenAiKey = Deno.env.get("OPENAI_API_KEY");
+  const originalOpenAiModel = Deno.env.get("OPENAI_MODEL");
+
+  Deno.env.set("GEMINI_API_KEY", "test-key");
+  Deno.env.set("OPENAI_API_KEY", "test-openai-key");
+  Deno.env.delete("OPENAI_MODEL");
+
+  try {
+    const cmd = new Deno.Command("deno", {
+      args: ["run", "--allow-env", "src/server.ts"],
+      stdout: "piped",
+      stderr: "piped",
+    });
+
+    const { stderr } = cmd.outputSync();
+    const stderrText = new TextDecoder().decode(stderr);
+
+    assertEquals(
+      stderrText.includes("OPENAI_MODEL environment variable is required"),
+      true,
+    );
+  } finally {
+    if (originalGeminiKey) {
+      Deno.env.set("GEMINI_API_KEY", originalGeminiKey);
+    } else {
+      Deno.env.delete("GEMINI_API_KEY");
+    }
+
+    if (originalOpenAiKey) {
+      Deno.env.set("OPENAI_API_KEY", originalOpenAiKey);
+    } else {
+      Deno.env.delete("OPENAI_API_KEY");
+    }
+
+    if (originalOpenAiModel) {
+      Deno.env.set("OPENAI_MODEL", originalOpenAiModel);
+    } else {
+      Deno.env.delete("OPENAI_MODEL");
     }
   }
 });
@@ -102,50 +160,5 @@ Deno.test("Server tools - have required properties", async () => {
     assertEquals(tool.inputSchema.type, "object");
     assertEquals(typeof tool.inputSchema.properties, "object");
     assertEquals(Array.isArray(tool.inputSchema.required), true);
-  }
-});
-
-Deno.test("Server prompts - all prompts are properly imported", async () => {
-  const researchModule = await import("../src/prompts/research-analysis.ts");
-  const eventsModule = await import("../src/prompts/current-events.ts");
-  const techModule = await import("../src/prompts/technical-documentation.ts");
-  const compareModule = await import("../src/prompts/compare-sources.ts");
-  const factModule = await import("../src/prompts/fact-check.ts");
-
-  assertEquals(typeof researchModule.researchAnalysisPrompt, "object");
-  assertEquals(typeof researchModule.buildResearchAnalysisPrompt, "function");
-
-  assertEquals(typeof eventsModule.currentEventsPrompt, "object");
-  assertEquals(typeof eventsModule.buildCurrentEventsPrompt, "function");
-
-  assertEquals(typeof techModule.technicalDocumentationPrompt, "object");
-  assertEquals(typeof techModule.buildTechnicalDocumentationPrompt, "function");
-
-  assertEquals(typeof compareModule.compareSourcesPrompt, "object");
-  assertEquals(typeof compareModule.buildCompareSourcesPrompt, "function");
-
-  assertEquals(typeof factModule.factCheckPrompt, "object");
-  assertEquals(typeof factModule.buildFactCheckPrompt, "function");
-});
-
-Deno.test("Server prompts - have required properties", async () => {
-  const researchModule = await import("../src/prompts/research-analysis.ts");
-  const eventsModule = await import("../src/prompts/current-events.ts");
-  const techModule = await import("../src/prompts/technical-documentation.ts");
-  const compareModule = await import("../src/prompts/compare-sources.ts");
-  const factModule = await import("../src/prompts/fact-check.ts");
-
-  const prompts = [
-    researchModule.researchAnalysisPrompt,
-    eventsModule.currentEventsPrompt,
-    techModule.technicalDocumentationPrompt,
-    compareModule.compareSourcesPrompt,
-    factModule.factCheckPrompt,
-  ];
-
-  for (const prompt of prompts) {
-    assertEquals(typeof prompt.name, "string");
-    assertEquals(typeof prompt.description, "string");
-    assertEquals(Array.isArray(prompt.arguments), true);
   }
 });
