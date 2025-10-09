@@ -149,7 +149,7 @@ access.
 
 ### ask_gpt
 
-Focused assistant powered by OpenAI GPT-5 Pro via the Responses API for high-quality reasoning and synthesis. 
+Focused assistant powered by OpenAI GPT-5 Pro via the Responses API for high-quality reasoning and synthesis.
 **Parameters:**
 
 - `prompt` (required): Your question, problem statement, or background context
@@ -166,11 +166,38 @@ Focused assistant powered by OpenAI GPT-5 Pro via the Responses API for high-qua
 }
 ```
 
+This tool queues the request in OpenAI background mode and responds with the
+generated `response_id`. Use the `get_gpt_answer` tool to poll for the final
+content.
+
 **Capabilities:**
 
 - 🧠 GPT-5 Pro reasoning through the Responses API
 - 🛠 Ideal for structured analysis, synthesis, and step-by-step problem solving
 - ✍️ Use when you already have the necessary context in your prompt
+
+### get_gpt_answer
+
+Retrieve the finished GPT-5 Pro response using the `response_id` produced by
+`ask_gpt`.
+
+**Parameters:**
+
+- `response_id` (required): Identifier returned from the `ask_gpt` tool.
+
+**Example:**
+
+```json
+{
+  "name": "get_gpt_answer",
+  "arguments": {
+    "response_id": "resp_123"
+  }
+}
+```
+
+If the job is still in progress, the response includes the current status so you
+know when to check again.
 
 ## Project Structure
 

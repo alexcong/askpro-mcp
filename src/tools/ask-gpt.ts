@@ -1,6 +1,9 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
-import { OpenAIClient, OpenAIRequest } from "../openai-client.ts";
+import {
+  OpenAIClient,
+  OpenAIRequest,
+} from "../openai-client.ts";
 
 const AskGptArgsSchema = z.object({
   prompt: z.string().min(1, "Prompt is required"),
@@ -23,6 +26,27 @@ export const askGptTool: Tool = {
   },
 };
 
+const GetGptAnswerArgsSchema = z.object({
+  response_id: z.string().min(1, "Response ID is required"),
+});
+
+export const getGptAnswerTool: Tool = {
+  name: "get_gpt_answer",
+  description:
+    "Retrieve the completed GPT response using a previously returned response ID.",
+  inputSchema: {
+    type: "object",
+    properties: {
+      response_id: {
+        type: "string",
+        description:
+          "The response identifier returned by the ask_gpt tool when the request was enqueued.",
+      },
+    },
+    required: ["response_id"],
+  },
+};
+
 export async function handleAskGpt(
   args: unknown,
 ): Promise<{ content: Array<{ type: "text"; text: string }> }> {
@@ -35,7 +59,36 @@ export async function handleAskGpt(
   };
 
   try {
-    const response = await openAiClient.generate(request);
+    const response = await openAiClient.createBackgroundResponse(request);
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: response.id,
+        },
+      ],
+    };
+  } catch (error) {
+    throw new Error(
+      `Failed to enqueue GPT request: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    );
+  }
+}
+
+export async function handleGetGptAnswer(
+  args: unknown,
+): Promise<{ content: Array<{ type: "text"; text: string }> }> {
+  const validatedArgs = GetGptAnswerArgsSchema.parse(args);
+
+  const openAiClient = new OpenAIClient();
+
+  try {
+    const response = await openAiClient.retrieveResponse(
+      validatedArgs.response_id,
+    );
 
     let formattedResponse = response.text;
 
@@ -58,7 +111,7 @@ export async function handleAskGpt(
     };
   } catch (error) {
     throw new Error(
-      `Failed to generate response with GPT-5 Pro: ${
+      `Failed to retrieve GPT response: ${
         error instanceof Error ? error.message : String(error)
       }`,
     );

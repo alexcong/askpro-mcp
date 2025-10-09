@@ -8,7 +8,12 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 
 import { askGeminiTool, handleAskGemini } from "./tools/ask-gemini.ts";
-import { askGptTool, handleAskGpt } from "./tools/ask-gpt.ts";
+import {
+  askGptTool,
+  getGptAnswerTool,
+  handleAskGpt,
+  handleGetGptAnswer,
+} from "./tools/ask-gpt.ts";
 
 class GeminiMcpServer {
   private server: Server;
@@ -17,7 +22,7 @@ class GeminiMcpServer {
     this.server = new Server(
       {
         name: "askpro-mcp-server",
-        version: "0.2.0",
+        version: "0.3.0",
       },
       {
         capabilities: {
@@ -34,7 +39,7 @@ class GeminiMcpServer {
     // Tools
     this.server.setRequestHandler(ListToolsRequestSchema, () => {
       return {
-        tools: [askGeminiTool, askGptTool],
+        tools: [askGeminiTool, askGptTool, getGptAnswerTool],
       };
     });
 
@@ -47,6 +52,8 @@ class GeminiMcpServer {
             return await handleAskGemini(args);
           case "ask_gpt":
             return await handleAskGpt(args);
+          case "get_gpt_answer":
+            return await handleGetGptAnswer(args);
 
           default:
             throw new Error(`Unknown tool: ${name}`);

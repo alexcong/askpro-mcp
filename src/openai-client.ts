@@ -11,7 +11,13 @@ export interface OpenAIRequest {
   prompt: string;
 }
 
-export interface OpenAIResponse {
+export interface OpenAIBackgroundResponse {
+  id: string;
+  status: string;
+}
+
+export interface OpenAICompletionResponse {
+  id: string;
   text: string;
   reasoningSummary?: string | null;
   status: string;
@@ -35,7 +41,9 @@ export class OpenAIClient {
     });
   }
 
-  async generate(request: OpenAIRequest): Promise<OpenAIResponse> {
+  async createBackgroundResponse(
+    request: OpenAIRequest,
+  ): Promise<OpenAIBackgroundResponse> {
     try {
       const response = await this.client.responses.create({
         model: this.model,
@@ -50,25 +58,42 @@ export class OpenAIClient {
             ],
           },
         ],
-        text: {},
-        reasoning: {},
-        tools: [],
-        store: false,
-      });
+        background: true,
+        store: true,
+        include: [
+          "reasoning.encrypted_content",
+        ]
+      } as unknown as Parameters<typeof this.client.responses.create>[0]);
+
+      const id = this.extractId(response);
+      const status = this.extractStatus(response);
+
+      return { id, status };
+    } catch (error) {
+      const message = this.normalizeError(error);
+      throw new Error(`OpenAI background request failed: ${message}`);
+    }
+  }
+
+  async retrieveResponse(responseId: string): Promise<OpenAICompletionResponse> {
+    try {
+      const response = await this.client.responses.retrieve(responseId);
 
       const text = this.extractOutputText(response) ||
         "No response text returned from OpenAI.";
       const reasoningSummary = this.extractReasoningSummary(response);
       const status = this.extractStatus(response);
+      const id = this.extractId(response);
 
       return {
+        id,
         text,
         reasoningSummary,
         status,
       };
     } catch (error) {
       const message = this.normalizeError(error);
-      throw new Error(`OpenAI generation failed: ${message}`);
+      throw new Error(`OpenAI retrieve failed: ${message}`);
     }
   }
 
@@ -132,6 +157,15 @@ export class OpenAIClient {
   private extractStatus(response: unknown): string {
     const status = (response as { status?: unknown })?.status;
     return typeof status === "string" && status.length > 0 ? status : "unknown";
+  }
+
+  private extractId(response: unknown): string {
+    const id = (response as { id?: unknown })?.id;
+    if (typeof id === "string" && id.length > 0) {
+      return id;
+    }
+
+    throw new Error("Response ID missing from OpenAI response");
   }
 
   private normalizeError(error: unknown): string {
